@@ -11,6 +11,7 @@ mod ping_readiness {
         let req = test::TestRequest::get().uri("/ping").to_request();
         let resp = test::call_service(&mut app, req).await;
         let result = test::read_body(resp).await;
+
         assert_eq!(std::str::from_utf8(&result).unwrap(), "pong");
     }
 
@@ -20,6 +21,7 @@ mod ping_readiness {
 
         let req = test::TestRequest::get().uri("/ready").to_request();
         let resp = test::call_service(&mut app, req).await;
+        
         assert_eq!(resp.status(), StatusCode::ACCEPTED);
     }
 }
