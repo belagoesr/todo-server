@@ -2,7 +2,7 @@
 mod ping_readiness {
     use todo_server::todo_api_web::controller::{ping, readiness};
 
-    use actix_web::{test, App, http::StatusCode};
+    use actix_web::{body, http::StatusCode, test, web, App};
 
     #[actix_web::test]
     async fn test_ping_pong() {
@@ -10,9 +10,10 @@ mod ping_readiness {
 
         let req = test::TestRequest::get().uri("/ping").to_request();
         let resp = test::call_service(&mut app, req).await;
-        let result = test::read_body(resp).await;
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await.unwrap();
 
-        assert_eq!(std::str::from_utf8(&result).unwrap(), "pong");
+        assert_eq!(bytes, web::Bytes::from_static(b"pong"));
     }
 
     #[actix_web::test]
@@ -21,7 +22,7 @@ mod ping_readiness {
 
         let req = test::TestRequest::get().uri("/ready").to_request();
         let resp = test::call_service(&mut app, req).await;
-        
+
         assert_eq!(resp.status(), StatusCode::ACCEPTED);
     }
 }
