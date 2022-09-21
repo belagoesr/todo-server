@@ -1,5 +1,5 @@
 use actix_web::{dev::Service, http::StatusCode, test, web, App, HttpResponse};
-use todo_server::todo_api_web::controller::{readiness, ping};
+use todo_server::todo_api_web::controller::{ping, readiness};
 
 mod todo_api_web;
 
