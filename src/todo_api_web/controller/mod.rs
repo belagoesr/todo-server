@@ -2,7 +2,7 @@ pub mod todo;
 
 use actix_web::{get, HttpResponse, Responder};
 
-#[get("/ready")]
+#[get("/~/ready")]
 pub async fn readiness() -> impl Responder {
     let process = std::process::Command::new("sh")
         .arg("-c")

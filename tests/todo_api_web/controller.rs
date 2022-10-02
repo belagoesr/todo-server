@@ -1,12 +1,11 @@
-#[cfg(test)]
 mod ping_readiness {
-    use todo_server::todo_api_web::controller::{ping, readiness};
+    use todo_server::todo_api_web::routes::app_routes;
 
     use actix_web::{body, http::StatusCode, test, web, App};
 
     #[actix_web::test]
     async fn test_ping_pong() {
-        let mut app = test::init_service(App::new().service(ping)).await;
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
 
         let req = test::TestRequest::get().uri("/ping").to_request();
         let resp = test::call_service(&mut app, req).await;
@@ -18,9 +17,8 @@ mod ping_readiness {
 
     #[actix_web::test]
     async fn test_readiness() {
-        let mut app = test::init_service(App::new().service(readiness)).await;
-
-        let req = test::TestRequest::get().uri("/ready").to_request();
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        let req = test::TestRequest::get().uri("/~/ready").to_request();
         let resp = test::call_service(&mut app, req).await;
 
         assert_eq!(resp.status(), StatusCode::ACCEPTED);
@@ -28,9 +26,9 @@ mod ping_readiness {
 }
 
 mod create_todo {
-    use todo_server::todo_api_web::{controller::todo::create_todo, model::todo::TodoIdResponse};
+    use todo_server::todo_api_web::{model::todo::TodoIdResponse, routes::app_routes};
 
-    use actix_web::{http::header::CONTENT_TYPE, test, web, App, body};
+    use actix_web::{body, http::header::CONTENT_TYPE, test, App};
     use serde_json::from_str;
 
     fn post_todo() -> String {
@@ -60,7 +58,7 @@ mod create_todo {
 
     #[actix_web::test]
     async fn valid_todo_post() {
-        let mut app = test::init_service(App::new().service(create_todo)).await;
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
 
         let req = test::TestRequest::post()
             .uri("/api/create")
