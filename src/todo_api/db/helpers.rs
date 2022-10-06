@@ -9,10 +9,9 @@ use aws_sdk_dynamodb::{
 pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
 
 pub async fn create_table() {
-    let config = aws_config::from_env().region("us-east-1").load().await;
+    let config = aws_config::load_from_env().await;
     let dynamodb_local_config = aws_sdk_dynamodb::config::Builder::from(&config)
         .endpoint_resolver(
-            // 8000 is the default dynamodb port
             Endpoint::immutable(Uri::from_static("http://localhost:8000")),
         )
         .build();
