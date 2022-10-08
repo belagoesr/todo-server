@@ -19,7 +19,6 @@ use num_cpus;
 // }
 
 #[actix_web::main]
-async fn main(){
-    create_table()
-        .await
+async fn main() {
+    create_table().await
 }
