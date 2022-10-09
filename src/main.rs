@@ -1,6 +1,6 @@
 mod todo_api;
 mod todo_api_web;
-use todo_api::db::helpers::create_table;
+use todo_api::db::helpers::{create_table, list_items, get_client};
 use todo_api_web::routes::app_routes;
 
 use actix_web::{App, HttpServer};
@@ -20,5 +20,6 @@ use num_cpus;
 
 #[actix_web::main]
 async fn main() {
-    create_table().await
+    // create_table().await;
+    list_items().await
 }

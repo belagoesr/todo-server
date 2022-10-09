@@ -3,8 +3,8 @@ use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Task {
-    is_done: bool,
-    title: String,
+    pub is_done: bool,
+    pub title: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -16,11 +16,11 @@ pub enum State {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TodoCard {
-    title: String,
-    description: String,
-    owner: Uuid,
-    tasks: Vec<Task>,
-    state: State,
+    pub title: String,
+    pub description: String,
+    pub owner: Uuid,
+    pub tasks: Vec<Task>,
+    pub state: State,
 }
 
 pub struct TodoCardId {
