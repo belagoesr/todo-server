@@ -1420,6 +1420,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_dynamo"
+version = "4.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad9e01501a6fcea651a0500601d6186bc0dff830751774f4340235f445d1d429"
+dependencies = [
+ "aws-sdk-dynamodb",
+ "serde",
+]
+
+[[package]]
 name = "serde_json"
 version = "1.0.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1548,7 +1558,9 @@ dependencies = [
  "num_cpus",
  "serde",
  "serde_derive",
+ "serde_dynamo",
  "serde_json",
+ "tokio-stream",
  "uuid",
 ]
 
