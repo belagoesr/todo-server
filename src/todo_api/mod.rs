@@ -1,2 +1,4 @@
+#[macro_use]
+pub mod adapter;
 pub mod db;
-pub mod models;
+pub mod model;
