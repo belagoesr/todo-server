@@ -11,11 +11,11 @@ pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
 pub async fn get_client() -> Client {
     let config = aws_config::load_from_env().await;
     let dynamodb_local_config = aws_sdk_dynamodb::config::Builder::from(&config)
-    .endpoint_resolver(Endpoint::immutable(Uri::from_static(
-        "http://localhost:8000",
-    )))
-    .build();
-    
+        .endpoint_resolver(Endpoint::immutable(Uri::from_static(
+            "http://localhost:8000",
+        )))
+        .build();
+
     Client::from_conf(dynamodb_local_config)
 }
 
@@ -43,28 +43,28 @@ pub async fn create_table() {
 async fn create_table_input(client: &Client) {
     let table_name = TODO_CARD_TABLE.to_string();
     let ad = AttributeDefinition::builder()
-    .attribute_name("id")
-    .attribute_type(ScalarAttributeType::S)
-    .build();
-    
+        .attribute_name("id")
+        .attribute_type(ScalarAttributeType::S)
+        .build();
+
     let ks = KeySchemaElement::builder()
-    .attribute_name("id")
-    .key_type(KeyType::Hash)
-    .build();
-    
+        .attribute_name("id")
+        .key_type(KeyType::Hash)
+        .build();
+
     let pt = ProvisionedThroughput::builder()
-    .read_capacity_units(1)
-    .write_capacity_units(1)
-    .build();
-    
+        .read_capacity_units(1)
+        .write_capacity_units(1)
+        .build();
+
     match client
-    .create_table()
-    .table_name(table_name)
-    .key_schema(ks)
-    .attribute_definitions(ad)
-    .provisioned_throughput(pt)
-    .send()
-    .await
+        .create_table()
+        .table_name(table_name)
+        .key_schema(ks)
+        .attribute_definitions(ad)
+        .provisioned_throughput(pt)
+        .send()
+        .await
     {
         Ok(output) => {
             println!("Output: {:?}", output);
@@ -76,10 +76,10 @@ async fn create_table_input(client: &Client) {
 }
 
 use tokio_stream::StreamExt;
-pub async fn list_items(){
+pub async fn list_items() {
     let client = get_client().await;
     let items = client
-    .scan()
+        .scan()
         .table_name(TODO_CARD_TABLE.to_string())
         .into_paginator()
         .items()
@@ -91,5 +91,5 @@ pub async fn list_items(){
     for item in items {
         println!("   {:?}", item);
     }
-   ()
+    ()
 }
