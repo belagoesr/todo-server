@@ -1,5 +1,3 @@
-use crate::todo_api_web::model::todo::{State, TodoCard};
-use actix_web::web;
 use aws_sdk_dynamodb::model::AttributeValue;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -7,8 +5,8 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct TaskDb {
-    is_done: bool,
-    title: String,
+    pub is_done: bool,
+    pub title: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -29,26 +27,9 @@ pub struct TodoCardDb {
 }
 
 impl TodoCardDb {
-    pub fn new(card: web::Json<TodoCard>) -> Self {
-        TodoCardDb {
-            id: Uuid::new_v4(),
-            title: card.title.clone(),
-            description: card.description.clone(),
-            owner: card.owner,
-            tasks: card
-                .tasks
-                .iter()
-                .map(|t| TaskDb {
-                    is_done: t.is_done,
-                    title: t.title.clone(),
-                })
-                .collect(),
-            state: match card.state {
-                State::Todo => StateDb::Todo,
-                State::Doing => StateDb::Doing,
-                State::Done => StateDb::Done,
-            },
-        }
+    #[allow(dead_code)]
+    pub fn get_id(self) -> Uuid {
+        self.id
     }
 }
 
@@ -66,19 +47,17 @@ impl Into<HashMap<String, AttributeValue>> for TodoCardDb {
         todo_card.insert("description".to_string(), val!(S => self.description));
         todo_card.insert("owner".to_string(), val!(S => self.owner.to_string()));
         todo_card.insert("state".to_string(), val!(S => self.state.to_string()));
-        todo_card.insert("tasks".to_string(), val!(L => task_to_db_val(self.tasks)));
+        todo_card.insert("tasks".to_string(), 
+            val!(L => self.tasks.into_iter().map(|t| t.to_db_val()).collect::<Vec<AttributeValue>>()));
         todo_card
     }
 }
 
-fn task_to_db_val(tasks: Vec<TaskDb>) -> Vec<AttributeValue> {
-    tasks
-        .iter()
-        .map(|t| {
-            let mut tasks_hash = HashMap::new();
-            tasks_hash.insert("title".to_string(), val!(S => t.title.clone()));
-            tasks_hash.insert("is_done".to_string(), val!(B => t.is_done));
+impl TaskDb {
+    fn to_db_val(self) -> AttributeValue {
+        let mut tasks_hash = HashMap::new();
+            tasks_hash.insert("title".to_string(), val!(S => self.title.clone()));
+            tasks_hash.insert("is_done".to_string(), val!(B => self.is_done));
             val!(M => tasks_hash)
-        })
-        .collect::<Vec<AttributeValue>>()
+    }
 }
