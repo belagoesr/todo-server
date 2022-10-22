@@ -3,20 +3,20 @@ use serde::Serialize;
 use std::collections::HashMap;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct TaskDb {
     pub is_done: bool,
     pub title: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub enum StateDb {
     Todo,
     Doing,
     Done,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct TodoCardDb {
     pub id: Uuid,
     pub title: String,
@@ -54,10 +54,10 @@ impl Into<HashMap<String, AttributeValue>> for TodoCardDb {
 }
 
 impl TaskDb {
-    fn to_db_val(self) -> AttributeValue {
+    pub fn to_db_val(self) -> AttributeValue {
         let mut tasks_hash = HashMap::new();
-            tasks_hash.insert("title".to_string(), val!(S => self.title.clone()));
-            tasks_hash.insert("is_done".to_string(), val!(B => self.is_done));
-            val!(M => tasks_hash)
+        tasks_hash.insert("title".to_string(), val!(S => self.title.clone()));
+        tasks_hash.insert("is_done".to_string(), val!(B => self.is_done));
+        val!(M => tasks_hash)
     }
 }
