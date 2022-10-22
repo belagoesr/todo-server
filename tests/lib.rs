@@ -1,6 +1,7 @@
 use actix_web::{dev::Service, http::StatusCode, test, web, App, HttpResponse};
 use todo_server::todo_api_web::controller::{ping, readiness};
 
+mod helpers;
 mod todo_api_web;
 
 #[actix_web::test]

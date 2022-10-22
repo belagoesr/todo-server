@@ -26,44 +26,21 @@ mod ping_readiness {
 }
 
 mod create_todo {
+    use crate::helpers::read_json;
     use todo_server::todo_api_web::{model::todo::TodoIdResponse, routes::app_routes};
 
     use actix_web::{body, http::header::CONTENT_TYPE, test, App};
     use serde_json::from_str;
 
-    fn post_todo() -> String {
-        String::from(
-            "{
-                \"title\": \"This is a card\",
-                \"description\": \"This is the description of the card\",
-                \"owner\": \"ae75c4d8-5241-4f1c-8e85-ff380c041442\",
-                \"tasks\": [
-                    {
-                        \"title\": \"title 1\",
-                        \"is_done\": true
-                    },
-                    {
-                        \"title\": \"title 2\",
-                        \"is_done\": true
-                    },
-                    {
-                        \"title\": \"title 3\",
-                        \"is_done\": false
-                    }
-                ],
-                \"state\": \"Doing\"
-            }",
-        )
-    }
-
     #[actix_web::test]
     async fn valid_todo_post() {
-        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        // use crate::todo_api::db::helpers::create_table().await;
 
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
         let req = test::TestRequest::post()
             .uri("/api/create")
             .insert_header((CONTENT_TYPE, "application/json"))
-            .set_payload(post_todo().as_bytes().to_owned())
+            .set_payload(read_json("post_todo.json").as_bytes().to_owned())
             .to_request();
 
         let resp = test::call_service(&mut app, req).await;
