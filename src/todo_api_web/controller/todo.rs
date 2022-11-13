@@ -1,7 +1,12 @@
 use crate::todo_api::adapter;
-use crate::todo_api::db::{helpers::get_client, todo::put_todo};
-use crate::todo_api_web::model::todo::{TodoCard, TodoIdResponse};
 
+use crate::todo_api::db::todo::{get_todos, put_todo};
+use crate::todo_api::db::{
+    helpers::get_client
+};
+use crate::todo_api_web::model::todo::{TodoCard, TodoCardsResponse, TodoIdResponse};
+
+use actix_web::get;
 use actix_web::{http::header::ContentType, post, web, HttpResponse, Responder};
 use uuid::Uuid;
 
@@ -18,5 +23,18 @@ pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
                 serde_json::to_string(&TodoIdResponse::new(id))
                     .expect("Failed to serialize todo card"),
             ),
+    }
+}
+
+#[get("/api/index")]
+pub async fn show_all_todo() -> impl Responder {
+    let client = get_client().await;
+    let resp = get_todos(&client).await;
+    match resp {
+        None => HttpResponse::InternalServerError().body("Failed to read todo cards"),
+        Some(todos) => HttpResponse::Ok().content_type("application/json").body(
+            serde_json::to_string(&TodoCardsResponse { cards: todos})
+                .expect("Failed to serialize todo cards"),
+        ),
     }
 }

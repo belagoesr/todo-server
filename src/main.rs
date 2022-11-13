@@ -18,6 +18,6 @@ async fn main() -> std::io::Result<()> {
 // #[actix_web::main]
 // async fn main() {
 //  use todo_api::db::helpers::{create_table, get_client, list_items};
-//     // create_table().await;
+//     create_table().await;
 //     list_items().await
 // }
