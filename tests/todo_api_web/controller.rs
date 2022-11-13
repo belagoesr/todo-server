@@ -50,3 +50,62 @@ mod create_todo {
         assert!(uuid::Uuid::parse_str(&id.get_id()).is_ok());
     }
 }
+
+mod read_all_todos {
+    use serde_json::from_str;
+    use todo_server::todo_api_web::{model::todo::TodoCardsResponse, routes::app_routes};
+
+    use actix_web::{body, http::StatusCode, test, App};
+
+    use crate::helpers::{mock_get_todos, read_json};
+
+    #[actix_web::test]
+    async fn test_todo_index_ok() {
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
+
+        let req = test::TestRequest::get().uri("/api/index").to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[actix_web::test]
+    async fn test_todo_cards_count() {
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
+
+        let post_req = test::TestRequest::post()
+            .uri("/api/create")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(read_json("post_todo.json").as_bytes().to_owned())
+            .to_request();
+
+        let _ = test::call_service(&mut app, post_req).await;
+        let get_req = test::TestRequest::get().uri("/api/index").to_request();
+        let resp_body = test::call_service(&mut app, get_req).await.into_body();
+        let bytes = body::to_bytes(resp_body).await.unwrap();
+        let todo_cards =
+            from_str::<TodoCardsResponse>(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
+
+        assert_eq!(todo_cards.cards.len(), 1);
+    }
+
+    #[actix_web::test]
+    async fn test_todo_cards_with_value() {
+        let mut app = test::init_service(App::new().configure(app_routes)).await;
+
+        let post_req = test::TestRequest::post()
+            .uri("/api/create")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(read_json("post_todo.json").as_bytes().to_owned())
+            .to_request();
+
+        let _ = test::call_service(&mut app, post_req).await;
+        let req = test::TestRequest::with_uri("/api/index").to_request();
+        let resp_body = test::call_service(&mut app, req).await.into_body();
+        let bytes = body::to_bytes(resp_body).await.unwrap();
+        let todo_cards: TodoCardsResponse =
+            from_str(&String::from_utf8(bytes.to_vec()).unwrap()).unwrap();
+
+        assert_eq!(todo_cards.cards, mock_get_todos());
+    }
+}
