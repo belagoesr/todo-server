@@ -1,9 +1,7 @@
 use crate::todo_api::adapter;
 
+use crate::todo_api::db::helpers::get_client;
 use crate::todo_api::db::todo::{get_todos, put_todo};
-use crate::todo_api::db::{
-    helpers::get_client
-};
 use crate::todo_api_web::model::todo::{TodoCard, TodoCardsResponse, TodoIdResponse};
 
 use actix_web::get;
@@ -33,7 +31,7 @@ pub async fn show_all_todo() -> impl Responder {
     match resp {
         None => HttpResponse::InternalServerError().body("Failed to read todo cards"),
         Some(todos) => HttpResponse::Ok().content_type("application/json").body(
-            serde_json::to_string(&TodoCardsResponse { cards: todos})
+            serde_json::to_string(&TodoCardsResponse { cards: todos })
                 .expect("Failed to serialize todo cards"),
         ),
     }

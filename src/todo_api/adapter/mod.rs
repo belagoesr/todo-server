@@ -1,8 +1,10 @@
+use std::collections::HashMap;
+
 use actix_web::web;
 use aws_sdk_dynamodb::model::AttributeValue;
 use uuid::Uuid;
 
-use crate::todo_api_web::model::todo::{State, TodoCard};
+use crate::todo_api_web::model::todo::{State, Task, TodoCard};
 
 use super::model::{StateDb, TaskDb, TodoCardDb};
 
@@ -44,9 +46,36 @@ pub fn todo_json_to_db(card: web::Json<TodoCard>, id: Uuid) -> TodoCardDb {
     }
 }
 
-pub fn scanoutput_to_todocards() -> Vec<TodoCard>
-{
-    vec![]
+pub fn scanoutput_to_todocards(output: Vec<HashMap<String, AttributeValue>>) -> Vec<TodoCard> {
+    let items = &output[0];
+    let id = items.get("id").unwrap().as_s().unwrap();
+    let owner = items.get("owner").unwrap().as_s().unwrap();
+    let title = items.get("title").unwrap().as_s().unwrap();
+    let description = items.get("description").unwrap().as_s().unwrap();
+    let state = items.get("state").unwrap().as_s().unwrap();
+    let tasks = items.get("tasks").unwrap().as_l().unwrap();
+
+    vec![TodoCard {
+        id: Some(uuid::Uuid::parse_str(id).unwrap()),
+        owner: uuid::Uuid::parse_str(owner).unwrap(),
+        title: title.to_string(),
+        description: description.to_string(),
+        state: State::from(state),
+        tasks: tasks
+            .iter()
+            .map(|t| Task {
+                title: t
+                    .as_m()
+                    .unwrap()
+                    .get("title")
+                    .unwrap()
+                    .as_s()
+                    .unwrap()
+                    .to_string(),
+                is_done: *t.as_m().unwrap().get("is_done").unwrap().as_bool().unwrap(),
+            })
+            .collect::<Vec<Task>>(),
+    }]
 }
 
 #[cfg(test)]
@@ -134,53 +163,56 @@ mod test {
         assert_eq!(actual, expected);
     }
 }
-
+// TODO: conserta
 #[cfg(test)]
 mod scan_to_cards {
+    use aws_sdk_dynamodb::model::AttributeValue;
+
     use super::scanoutput_to_todocards;
-    use crate::todo_api_web::model::{Task, TodoCard, State};
+    use crate::todo_api_web::model::todo::{State, Task, TodoCard};
 
-
-    fn scan_with_one() -> ScanOutput {
+    fn scan_with_one() -> Option<Vec<std::collections::HashMap<String, AttributeValue>>> {
         let mut tasks_hash = std::collections::HashMap::new();
-        
-        tasks_hash.insert("title".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("blob".to_string()), ss: None });
-        tasks_hash.insert("is_done".to_string(), AttributeValue{ b: None, bool: Some(true), bs: None, l: None, m: None, n: None, ns: None, null: None, s: None, ss: None });
-        let mut hash = std::collections::HashMap::new();
-        hash.insert("title".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("title".to_string()), ss: None });
-        hash.insert("description".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("description".to_string()), ss: None });
-        hash.insert("owner".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("90e700b0-2b9b-4c74-9285-f5fc94764995".to_string()), ss: None });
-        hash.insert("id".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("646b670c-bb50-45a4-ba08-3ab684bc4e95".to_string()), ss: None });
-        hash.insert("state".to_string(), AttributeValue{ b: None, bool: None, bs: None, l: None, m: None, n: None, ns: None, null: None, s: Some("Done".to_string()), ss: None });
-        hash.insert("tasks".to_string(), AttributeValue { b: None, bool: None, bs: None, l: Some(vec![
-            AttributeValue { b: None, bool: None, bs: None, l: None, m: Some(tasks_hash), n: None, ns: None, null: None, s: None, ss: None }]), m: None, n: None, ns: None, null: None, s: None, ss: None });
+        tasks_hash.insert("title".to_string(), AttributeValue::S("blob".to_string()));
+        tasks_hash.insert("is_done".to_string(), AttributeValue::Bool(true));
 
-        ScanOutput { 
-            consumed_capacity: None, 
-            count: Some(1), 
-            items: Some(vec![hash]), 
-            last_evaluated_key: None, 
-            scanned_count: Some(1) }
+        let mut hash = std::collections::HashMap::new();
+        hash.insert("title".to_string(), AttributeValue::S("title".to_string()));
+        hash.insert(
+            "description".to_string(),
+            AttributeValue::S("description".to_string()),
+        );
+        hash.insert(
+            "owner".to_string(),
+            AttributeValue::S("90e700b0-2b9b-4c74-9285-f5fc94764995".to_string()),
+        );
+        hash.insert(
+            "id".to_string(),
+            AttributeValue::S("646b670c-bb50-45a4-ba08-3ab684bc4e95".to_string()),
+        );
+        hash.insert("state".to_string(), AttributeValue::S("Done".to_string()));
+        hash.insert(
+            "tasks".to_string(),
+            AttributeValue::L(vec![AttributeValue::M(tasks_hash)]),
+        );
+
+        Some(vec![hash])
     }
 
     #[test]
     fn scanoutput_has_one_item() {
-        let scan = scan_with_one();
-        let todos = vec![
-            TodoCard {
-                title: "title".to_string(),
-                description: "description".to_string(),
-                state: State::Done,
-                id: Some(uuid::Uuid::parse_str("646b670c-bb50-45a4-ba08-3ab684bc4e95").unwrap()),
-                owner: uuid::Uuid::parse_str("90e700b0-2b9b-4c74-9285-f5fc94764995").unwrap(),
-                tasks: vec![
-                    Task {
-                        is_done: true,
-                        title: "blob".to_string()
-                    }
-                ]
-            }
-        ];
+        let scan = scan_with_one().unwrap();
+        let todos = vec![TodoCard {
+            title: "title".to_string(),
+            description: "description".to_string(),
+            state: State::Done,
+            id: Some(uuid::Uuid::parse_str("646b670c-bb50-45a4-ba08-3ab684bc4e95").unwrap()),
+            owner: uuid::Uuid::parse_str("90e700b0-2b9b-4c74-9285-f5fc94764995").unwrap(),
+            tasks: vec![Task {
+                is_done: true,
+                title: "blob".to_string(),
+            }],
+        }];
 
         assert_eq!(scanoutput_to_todocards(scan), todos)
     }

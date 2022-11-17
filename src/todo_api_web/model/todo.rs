@@ -13,6 +13,16 @@ pub enum State {
     Doing,
     Done,
 }
+impl From<&String> for State {
+    fn from(s: &String) -> Self {
+        match s.as_str() {
+            "Todo" | "todo" => State::Todo,
+            "Doing" | "doing" => State::Doing,
+            "Done" | "done" => State::Done,
+            _ => State::Todo,
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct TodoCard {
