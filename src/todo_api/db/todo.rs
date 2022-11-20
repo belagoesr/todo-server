@@ -5,7 +5,7 @@ use aws_sdk_dynamodb::{model::AttributeValue, Client};
 
 use crate::{todo_api::db::helpers::TODO_CARD_TABLE, todo_api_web::model::todo::TodoCard};
 
-#[cfg(feature = "dynamo")]
+#[cfg(not(feature = "dynamo"))]
 pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
     match client
         .put_item()
@@ -22,40 +22,53 @@ pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uu
     }
 }
 
-#[cfg(not(feature = "dynamo"))]
+#[cfg(feature = "dynamo")]
 pub async fn put_todo(_client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
     Some(todo_card.id)
 }
 
-#[cfg(feature = "dynamo")]
-pub async fn get_todos(client: &Client) -> Option<Vec<TodoCard>> {
-    println!("starting db call");
-    use tokio_stream::StreamExt;
-
-    use crate::todo_api::adapter;
-
-    let items: Result<Vec<HashMap<String, AttributeValue>>, _> = client
-        .scan()
-        .table_name(TODO_CARD_TABLE.to_string())
-        .into_paginator()
-        .items()
-        .send()
-        .collect()
-        .await;
-
-    println!("Items in table:");
-    for item in items {
-        println!("   {:?}", item);
-    }
-
-    Some(vec![])
-    //     match items {
-    //             Ok(_) => Some(adapter::scanoutput_to_todocards()),
-    //             Err(_) => None
-    //         }
-}
-
 #[cfg(not(feature = "dynamo"))]
 pub async fn get_todos(client: &Client) -> Option<Vec<TodoCard>> {
-    Some(vec![])
+    use crate::todo_api::adapter;
+
+    let scan_output = client
+        .scan()
+        .table_name(TODO_CARD_TABLE.to_string())
+        .limit(100i32)
+        .send()
+        .await;
+
+    match scan_output {
+        Ok(dbitems) => Some(adapter::scanoutput_to_todocards(
+            dbitems.items().unwrap().to_vec(),
+        )),
+        Err(_) => None,
+    }
+}
+
+#[cfg(feature = "dynamo")]
+pub async fn get_todos(_client: &Client) -> Option<Vec<TodoCard>> {
+    use crate::todo_api_web::model::todo::{State, Task};
+
+    Some(vec![TodoCard {
+        id: Some(uuid::Uuid::parse_str("be75c4d8-5241-4f1c-8e85-ff380c041664").unwrap()),
+        title: String::from("This is a card"),
+        description: String::from("This is the description of the card"),
+        owner: uuid::Uuid::parse_str("ae75c4d8-5241-4f1c-8e85-ff380c041442").unwrap(),
+        tasks: vec![
+            Task {
+                title: String::from("title 1"),
+                is_done: true,
+            },
+            Task {
+                title: String::from("title 2"),
+                is_done: true,
+            },
+            Task {
+                title: String::from("title 3"),
+                is_done: false,
+            },
+        ],
+        state: State::Doing,
+    }])
 }
