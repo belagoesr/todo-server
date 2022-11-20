@@ -47,35 +47,39 @@ pub fn todo_json_to_db(card: web::Json<TodoCard>, id: Uuid) -> TodoCardDb {
 }
 
 pub fn scanoutput_to_todocards(output: Vec<HashMap<String, AttributeValue>>) -> Vec<TodoCard> {
-    let items = &output[0];
-    let id = items.get("id").unwrap().as_s().unwrap();
-    let owner = items.get("owner").unwrap().as_s().unwrap();
-    let title = items.get("title").unwrap().as_s().unwrap();
-    let description = items.get("description").unwrap().as_s().unwrap();
-    let state = items.get("state").unwrap().as_s().unwrap();
-    let tasks = items.get("tasks").unwrap().as_l().unwrap();
+    output
+        .into_iter()
+        .map(|item| {
+            let id = item.get("id").unwrap().as_s().unwrap();
+            let owner = item.get("owner").unwrap().as_s().unwrap();
+            let title = item.get("title").unwrap().as_s().unwrap();
+            let description = item.get("description").unwrap().as_s().unwrap();
+            let state = item.get("state").unwrap().as_s().unwrap();
+            let tasks = item.get("tasks").unwrap().as_l().unwrap();
 
-    vec![TodoCard {
-        id: Some(uuid::Uuid::parse_str(id).unwrap()),
-        owner: uuid::Uuid::parse_str(owner).unwrap(),
-        title: title.to_string(),
-        description: description.to_string(),
-        state: State::from(state),
-        tasks: tasks
-            .iter()
-            .map(|t| Task {
-                title: t
-                    .as_m()
-                    .unwrap()
-                    .get("title")
-                    .unwrap()
-                    .as_s()
-                    .unwrap()
-                    .to_string(),
-                is_done: *t.as_m().unwrap().get("is_done").unwrap().as_bool().unwrap(),
-            })
-            .collect::<Vec<Task>>(),
-    }]
+            TodoCard {
+                id: Some(uuid::Uuid::parse_str(id).unwrap()),
+                owner: uuid::Uuid::parse_str(owner).unwrap(),
+                title: title.to_string(),
+                description: description.to_string(),
+                state: State::from(state),
+                tasks: tasks
+                    .iter()
+                    .map(|t| Task {
+                        title: t
+                            .as_m()
+                            .unwrap()
+                            .get("title")
+                            .unwrap()
+                            .as_s()
+                            .unwrap()
+                            .to_string(),
+                        is_done: *t.as_m().unwrap().get("is_done").unwrap().as_bool().unwrap(),
+                    })
+                    .collect::<Vec<Task>>(),
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]
