@@ -1,3 +1,4 @@
+const todo_file: &str = "post_todo.json";
 mod ping_readiness {
     use todo_server::todo_api_web::routes::app_routes;
 
@@ -29,7 +30,11 @@ mod create_todo {
     use crate::helpers::read_json;
     use todo_server::todo_api_web::{model::todo::TodoIdResponse, routes::app_routes};
 
-    use actix_web::{body, http::header::CONTENT_TYPE, test, App};
+    use actix_web::{
+        body,
+        http::header::{ContentType, CONTENT_TYPE},
+        test, App,
+    };
     use serde_json::from_str;
 
     #[actix_web::test]
@@ -39,8 +44,8 @@ mod create_todo {
         let mut app = test::init_service(App::new().configure(app_routes)).await;
         let req = test::TestRequest::post()
             .uri("/api/create")
-            .insert_header((CONTENT_TYPE, "application/json"))
-            .set_payload(read_json("post_todo.json").as_bytes().to_owned())
+            .insert_header((CONTENT_TYPE, ContentType::json()))
+            .set_payload(read_json(todo_file).as_bytes().to_owned())
             .to_request();
 
         let resp = test::call_service(&mut app, req).await;
@@ -55,7 +60,14 @@ mod read_all_todos {
     use serde_json::from_str;
     use todo_server::todo_api_web::{model::todo::TodoCardsResponse, routes::app_routes};
 
-    use actix_web::{body, http::StatusCode, test, App};
+    use actix_web::{
+        body,
+        http::{
+            header::{ContentType, CONTENT_TYPE},
+            StatusCode,
+        },
+        test, App,
+    };
 
     use crate::helpers::{mock_get_todos, read_json};
 
@@ -75,8 +87,8 @@ mod read_all_todos {
 
         let post_req = test::TestRequest::post()
             .uri("/api/create")
-            .insert_header(("Content-Type", "application/json"))
-            .set_payload(read_json("post_todo.json").as_bytes().to_owned())
+            .insert_header((CONTENT_TYPE, ContentType::json()))
+            .set_payload(read_json(todo_file).as_bytes().to_owned())
             .to_request();
 
         let _ = test::call_service(&mut app, post_req).await;
@@ -95,8 +107,8 @@ mod read_all_todos {
 
         let post_req = test::TestRequest::post()
             .uri("/api/create")
-            .insert_header(("Content-Type", "application/json"))
-            .set_payload(read_json("post_todo.json").as_bytes().to_owned())
+            .insert_header((CONTENT_TYPE, ContentType::json()))
+            .set_payload(read_json(todo_file).as_bytes().to_owned())
             .to_request();
 
         let _ = test::call_service(&mut app, post_req).await;
