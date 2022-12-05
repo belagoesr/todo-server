@@ -1,8 +1,6 @@
-const todo_file: &str = "post_todo.json";
 mod ping_readiness {
-    use todo_server::todo_api_web::routes::app_routes;
-
     use actix_web::{body, http::StatusCode, test, web, App};
+    use todo_server::todo_api_web::routes::app_routes;
 
     #[actix_web::test]
     async fn test_ping_pong() {
@@ -28,7 +26,10 @@ mod ping_readiness {
 
 mod create_todo {
     use crate::helpers::read_json;
-    use todo_server::todo_api_web::{model::todo::TodoIdResponse, routes::app_routes};
+    use todo_server::{
+        todo_api::db::helpers::TODO_FILE,
+        todo_api_web::{model::todo::TodoIdResponse, routes::app_routes},
+    };
 
     use actix_web::{
         body,
@@ -45,7 +46,7 @@ mod create_todo {
         let req = test::TestRequest::post()
             .uri("/api/create")
             .insert_header((CONTENT_TYPE, ContentType::json()))
-            .set_payload(read_json(todo_file).as_bytes().to_owned())
+            .set_payload(read_json(TODO_FILE).as_bytes().to_owned())
             .to_request();
 
         let resp = test::call_service(&mut app, req).await;
@@ -58,6 +59,7 @@ mod create_todo {
 
 mod read_all_todos {
     use serde_json::from_str;
+    use todo_server::todo_api::db::helpers::TODO_FILE;
     use todo_server::todo_api_web::{model::todo::TodoCardsResponse, routes::app_routes};
 
     use actix_web::{
@@ -88,7 +90,7 @@ mod read_all_todos {
         let post_req = test::TestRequest::post()
             .uri("/api/create")
             .insert_header((CONTENT_TYPE, ContentType::json()))
-            .set_payload(read_json(todo_file).as_bytes().to_owned())
+            .set_payload(read_json(TODO_FILE).as_bytes().to_owned())
             .to_request();
 
         let _ = test::call_service(&mut app, post_req).await;
@@ -108,7 +110,7 @@ mod read_all_todos {
         let post_req = test::TestRequest::post()
             .uri("/api/create")
             .insert_header((CONTENT_TYPE, ContentType::json()))
-            .set_payload(read_json(todo_file).as_bytes().to_owned())
+            .set_payload(read_json(TODO_FILE).as_bytes().to_owned())
             .to_request();
 
         let _ = test::call_service(&mut app, post_req).await;
