@@ -40,22 +40,32 @@ pub async fn create_table() {
     }
 }
 
-async fn create_table_input(client: &Client) {
-    let table_name = TODO_CARD_TABLE.to_string();
-    let ad = AttributeDefinition::builder()
-        .attribute_name("id")
-        .attribute_type(ScalarAttributeType::S)
-        .build();
-
-    let ks = KeySchemaElement::builder()
+fn build_key_schema() -> KeySchemaElement {
+    KeySchemaElement::builder()
         .attribute_name("id")
         .key_type(KeyType::Hash)
-        .build();
+        .build()
+}
 
-    let pt = ProvisionedThroughput::builder()
+fn build_provisioned_throughput() -> ProvisionedThroughput {
+    ProvisionedThroughput::builder()
         .read_capacity_units(1)
         .write_capacity_units(1)
-        .build();
+        .build()
+}
+
+fn build_attribute_definition() -> AttributeDefinition {
+    AttributeDefinition::builder()
+        .attribute_name("id")
+        .attribute_type(ScalarAttributeType::S)
+        .build()
+}
+
+async fn create_table_input(client: &Client) {
+    let table_name = TODO_CARD_TABLE.to_string();
+    let ad = build_attribute_definition();
+    let ks = build_key_schema();
+    let pt = build_provisioned_throughput();
 
     match client
         .create_table()
