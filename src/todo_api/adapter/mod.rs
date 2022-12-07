@@ -46,42 +46,44 @@ pub fn todo_json_to_db(card: web::Json<TodoCard>, id: Uuid) -> TodoCardDb {
     }
 }
 
-pub fn scanoutput_to_todocards(output: ScanOutput) -> Vec<TodoCard> {
-    output
-        .items()
-        .unwrap()
-        .into_iter()
-        .map(|item| {
-            let id = item.get("id").unwrap().as_s().unwrap();
-            let owner = item.get("owner").unwrap().as_s().unwrap();
-            let title = item.get("title").unwrap().as_s().unwrap();
-            let description = item.get("description").unwrap().as_s().unwrap();
-            let state = item.get("state").unwrap().as_s().unwrap();
-            let tasks = item.get("tasks").unwrap().as_l().unwrap();
+pub fn scanoutput_to_todocards(output: ScanOutput) -> Option<Vec<TodoCard>> {
+    Some(
+        output
+            .items()?
+            .into_iter()
+            .filter_map(|item| {
+                let id = item.get("id")?.as_s().ok();
+                let owner = item.get("owner")?.as_s().ok();
+                let title = item.get("title")?.as_s().ok();
+                let description = item.get("description")?.as_s().ok();
+                let state = item.get("state")?.as_s().ok();
+                let tasks = item.get("tasks")?.as_l().ok();
 
-            TodoCard {
-                id: Some(uuid::Uuid::parse_str(id).unwrap()),
-                owner: uuid::Uuid::parse_str(owner).unwrap(),
-                title: title.to_string(),
-                description: description.to_string(),
-                state: State::from(state),
-                tasks: tasks
-                    .iter()
-                    .map(|t| Task {
-                        title: t
-                            .as_m()
-                            .unwrap()
-                            .get("title")
-                            .unwrap()
-                            .as_s()
-                            .unwrap()
-                            .to_string(),
-                        is_done: *t.as_m().unwrap().get("is_done").unwrap().as_bool().unwrap(),
-                    })
-                    .collect::<Vec<Task>>(),
-            }
-        })
-        .collect()
+                Some(TodoCard {
+                    id: uuid::Uuid::parse_str(id?).ok(),
+                    owner: uuid::Uuid::parse_str(owner?).ok()?,
+                    title: title?.to_string(),
+                    description: description?.to_string(),
+                    state: State::from(state?),
+                    tasks: tasks?
+                        .iter()
+                        .filter_map(|t| {
+                            Some(Task {
+                                title: t.as_m().unwrap().get("title")?.as_s().unwrap().to_string(),
+                                is_done: *t
+                                    .as_m()
+                                    .unwrap()
+                                    .get("is_done")
+                                    .unwrap()
+                                    .as_bool()
+                                    .unwrap(),
+                            })
+                        })
+                        .collect::<Vec<Task>>(),
+                })
+            })
+            .collect(),
+    )
 }
 
 #[cfg(test)]
@@ -246,7 +248,7 @@ mod scan_to_cards {
             }],
         }];
 
-        assert_eq!(scanoutput_to_todocards(scan), todos)
+        assert_eq!(scanoutput_to_todocards(scan).unwrap(), todos)
     }
 
     #[test]
@@ -265,6 +267,6 @@ mod scan_to_cards {
         };
         let todos = vec![todo.clone(), todo];
 
-        assert_eq!(scanoutput_to_todocards(scan), todos)
+        assert_eq!(scanoutput_to_todocards(scan).unwrap(), todos)
     }
 }

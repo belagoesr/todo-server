@@ -39,9 +39,10 @@ pub async fn get_todos(client: &Client) -> Option<Vec<TodoCard>> {
         .await;
 
     match scan_output {
-        Ok(dbitems) => Some(adapter::scanoutput_to_todocards(
-            dbitems, //.items().unwrap().to_vec(),
-        )),
+        Ok(dbitems) => {
+            let res = adapter::scanoutput_to_todocards(dbitems)?.to_vec();
+            Some(res)
+        }
         Err(_) => None,
     }
 }
