@@ -10,6 +10,10 @@ pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
 
 pub static TODO_FILE: &str = "post_todo.json";
 
+pub static ERROR_SERIALIZE: &str = "Failed to serialize todo cards";
+pub static ERROR_CREATE: &str = "Failed to create todo card";
+pub static ERROR_READ: &str = "Failed to read todo card";
+
 pub async fn get_client() -> Client {
     let config = aws_config::load_from_env().await;
     let dynamodb_local_config = aws_sdk_dynamodb::config::Builder::from(&config)
