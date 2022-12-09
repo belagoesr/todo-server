@@ -68,15 +68,10 @@ pub fn scanoutput_to_todocards(output: ScanOutput) -> Option<Vec<TodoCard>> {
                     tasks: tasks?
                         .iter()
                         .filter_map(|t| {
+                            let is_done = *t.as_m().unwrap().get("is_done")?.as_bool().unwrap();
                             Some(Task {
                                 title: t.as_m().unwrap().get("title")?.as_s().unwrap().to_string(),
-                                is_done: *t
-                                    .as_m()
-                                    .unwrap()
-                                    .get("is_done")
-                                    .unwrap()
-                                    .as_bool()
-                                    .unwrap(),
+                                is_done,
                             })
                         })
                         .collect::<Vec<Task>>(),
@@ -174,7 +169,7 @@ mod test {
 
 #[cfg(test)]
 mod scan_to_cards {
-    use std::collections::HashMap;
+    use std::{collections::HashMap, vec};
 
     use aws_sdk_dynamodb::{model::AttributeValue, output::ScanOutput};
 
@@ -182,28 +177,33 @@ mod scan_to_cards {
     use crate::todo_api_web::model::todo::{State, Task, TodoCard};
 
     fn attr_values() -> HashMap<String, AttributeValue> {
-        let mut tasks_hash = HashMap::new();
-        tasks_hash.insert("is_done".to_string(), AttributeValue::Bool(true));
-        tasks_hash.insert("title".to_string(), AttributeValue::S("blob".to_string()));
-        let mut hash = HashMap::new();
-        hash.insert("title".to_string(), AttributeValue::S("title".to_string()));
-        hash.insert(
-            "description".to_string(),
-            AttributeValue::S("description".to_string()),
-        );
-        hash.insert(
-            "owner".to_string(),
-            AttributeValue::S("90e700b0-2b9b-4c74-9285-f5fc94764995".to_string()),
-        );
-        hash.insert(
-            "id".to_string(),
-            AttributeValue::S("646b670c-bb50-45a4-ba08-3ab684bc4e95".to_string()),
-        );
-        hash.insert("state".to_string(), AttributeValue::S("Done".to_string()));
-        hash.insert(
-            "tasks".to_string(),
-            AttributeValue::L(vec![AttributeValue::M(tasks_hash)]),
-        );
+        let tasks = vec![
+            ("is_done".to_string(), AttributeValue::Bool(true)),
+            ("title".to_string(), AttributeValue::S("blob".to_string())),
+        ];
+        let tasks_hash = HashMap::<String, AttributeValue>::from_iter(tasks);
+
+        let values = vec![
+            ("title".to_string(), AttributeValue::S("title".to_string())),
+            (
+                "description".to_string(),
+                AttributeValue::S("description".to_string()),
+            ),
+            (
+                "owner".to_string(),
+                AttributeValue::S("90e700b0-2b9b-4c74-9285-f5fc94764995".to_string()),
+            ),
+            (
+                "id".to_string(),
+                AttributeValue::S("646b670c-bb50-45a4-ba08-3ab684bc4e95".to_string()),
+            ),
+            ("state".to_string(), AttributeValue::S("Done".to_string())),
+            (
+                "tasks".to_string(),
+                AttributeValue::L(vec![AttributeValue::M(tasks_hash)]),
+            ),
+        ];
+        let hash = HashMap::<String, AttributeValue>::from_iter(values);
         hash
     }
 
