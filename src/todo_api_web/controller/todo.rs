@@ -5,6 +5,7 @@ use crate::todo_api_web::model::todo::{TodoCard, TodoCardsResponse, TodoIdRespon
 
 use actix_web::get;
 use actix_web::{http::header::ContentType, post, web, HttpResponse, Responder};
+use log::{debug, error};
 use uuid::Uuid;
 
 #[post("/api/create")]
@@ -13,7 +14,10 @@ pub async fn create_todo(info: web::Json<TodoCard>) -> impl Responder {
     let todo_card = adapter::todo_json_to_db(info, id);
     let client = get_client().await;
     match put_todo(&client, todo_card).await {
-        None => HttpResponse::BadRequest().body(ERROR_CREATE),
+        None => {
+            error!("Failed to create todo card");
+            HttpResponse::BadRequest().body(ERROR_CREATE)
+        }
         Some(id) => HttpResponse::Created()
             .content_type(ContentType::json())
             .body(serde_json::to_string(&TodoIdResponse::new(id)).expect(ERROR_SERIALIZE)),
@@ -25,7 +29,10 @@ pub async fn show_all_todo() -> impl Responder {
     let client = get_client().await;
     let resp = get_todos(&client).await;
     match resp {
-        None => HttpResponse::InternalServerError().body(ERROR_READ),
+        None => {
+            error!("Failed to read todo cards");
+            HttpResponse::InternalServerError().body(ERROR_READ)
+        }
         Some(cards) => HttpResponse::Ok()
             .content_type(ContentType::json())
             .body(serde_json::to_string(&TodoCardsResponse { cards }).expect(ERROR_SERIALIZE)),
