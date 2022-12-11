@@ -2,6 +2,7 @@ use crate::todo_api::model::TodoCardDb;
 use aws_sdk_dynamodb::{Client};
 
 use crate::{todo_api::db::helpers::TODO_CARD_TABLE, todo_api_web::model::todo::TodoCard};
+use log::{debug, error};
 
 #[cfg(not(feature = "dynamo"))]
 pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uuid> {
@@ -12,9 +13,12 @@ pub async fn put_todo(client: &Client, todo_card: TodoCardDb) -> Option<uuid::Uu
         .send()
         .await
     {
-        Ok(_) => Some(todo_card.id),
+        Ok(_) => {
+            debug!("item created with id {:?}", todo_card.id);
+            Some(todo_card.id)
+        }
         Err(e) => {
-            println!("{:?}", e);
+            error!("error when creating item {:?}", e);
             None
         }
     }
@@ -39,9 +43,13 @@ pub async fn get_todos(client: &Client) -> Option<Vec<TodoCard>> {
     match scan_output {
         Ok(dbitems) => {
             let res = adapter::scanoutput_to_todocards(dbitems)?.to_vec();
+            debug!("Scanned {:?} todo cards", res);
             Some(res)
         }
-        Err(_) => None,
+        Err(e) => {
+            error!("Could not scan todocards due to error {:?}", e);
+            None
+        }
     }
 }
 

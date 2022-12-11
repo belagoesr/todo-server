@@ -5,6 +5,7 @@ use aws_sdk_dynamodb::{
     },
     Client, Endpoint,
 };
+use log::{debug, error};
 
 pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
 
@@ -83,10 +84,10 @@ async fn create_table_input(client: &Client) {
         .await
     {
         Ok(output) => {
-            println!("Output: {:?}", output);
+            debug!("Table created {:?}", output);
         }
         Err(error) => {
-            println!("Error: {:?}", error);
+            error!("Could not create table due to error: {:?}", error);
         }
     }
 }
