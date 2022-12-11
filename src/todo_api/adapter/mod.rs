@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
 use actix_web::web;
-use aws_sdk_dynamodb::{model::AttributeValue, output::ScanOutput};
+use aws_sdk_dynamodb::{output::ScanOutput};
 use uuid::Uuid;
 
 use crate::todo_api_web::model::todo::{State, Task, TodoCard};
@@ -11,16 +9,16 @@ use super::model::{StateDb, TaskDb, TodoCardDb};
 #[macro_export]
 macro_rules! val {
     (B => $bval:expr) => {{
-        AttributeValue::Bool($bval)
+        aws_sdk_dynamodb::model::AttributeValue::Bool($bval)
     }};
     (L => $val:expr) => {{
-        AttributeValue::L($val)
+        aws_sdk_dynamodb::model::AttributeValue::L($val)
     }};
     (S => $val:expr) => {{
-        AttributeValue::S($val)
+        aws_sdk_dynamodb::model::AttributeValue::S($val)
     }};
     (M => $val:expr) => {{
-        AttributeValue::M($val)
+        aws_sdk_dynamodb::model::AttributeValue::M($val)
     }};
 }
 
@@ -68,9 +66,9 @@ pub fn scanoutput_to_todocards(output: ScanOutput) -> Option<Vec<TodoCard>> {
                     tasks: tasks?
                         .iter()
                         .filter_map(|t| {
-                            let is_done = *t.as_m().unwrap().get("is_done")?.as_bool().unwrap();
+                            let is_done = *t.as_m().ok()?.get("is_done")?.as_bool().ok()?;
                             Some(Task {
-                                title: t.as_m().unwrap().get("title")?.as_s().unwrap().to_string(),
+                                title: t.as_m().ok()?.get("title")?.as_s().ok()?.to_string(),
                                 is_done,
                             })
                         })
@@ -138,7 +136,7 @@ mod test {
     #[test]
     fn todo_card_db_to_db_val() {
         let id = uuid::Uuid::new_v4();
-        let actual: HashMap<String, AttributeValue> = TodoCardDb {
+        let actual: HashMap<String, aws_sdk_dynamodb::model::AttributeValue> = TodoCardDb {
             id: id,
             title: "title".to_string(),
             description: "description".to_string(),

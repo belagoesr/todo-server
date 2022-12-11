@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
 use crate::todo_api::model::TodoCardDb;
-use aws_sdk_dynamodb::{model::AttributeValue, Client};
+use aws_sdk_dynamodb::{Client};
 
 use crate::{todo_api::db::helpers::TODO_CARD_TABLE, todo_api_web::model::todo::TodoCard};
 
