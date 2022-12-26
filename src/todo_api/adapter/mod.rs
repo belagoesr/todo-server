@@ -1,5 +1,5 @@
 use actix_web::web;
-use aws_sdk_dynamodb::{output::ScanOutput};
+use aws_sdk_dynamodb::output::ScanOutput;
 use uuid::Uuid;
 
 use crate::todo_api_web::model::todo::{State, Task, TodoCard};

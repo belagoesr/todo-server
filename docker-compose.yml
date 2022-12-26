@@ -1,5 +1,65 @@
-version: "3.7"
+# version: "3.7"
+# services:
+#   web:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     command: cargo run
+#     ports:
+#       - "4000:4000"
+#     cap_drop:
+#       - all
+#     cap_add:
+#       - NET_BIND_SERVICE
+#     environment:
+#       - AWS_ACCESS_KEY_ID=AKIDLOCALSTACK
+#       - AWS_SECRET_ACCESS_KEY=localstacksecret
+#       - AWS_REGION=us-east-1
+#       - AWS_DYNAMODB_ENDPOINT=http://0.0.0.0:8000
+#     depends_on:
+#       - dynamodb
+#     links:
+#       - dynamodb
+#     networks:
+#       internal_net:
+#         ipv4_address: 172.21.1.2
+
+#   dynamodb:
+#     container_name: "dynamodb"
+#     image: amazon/dynamodb-local
+#     ports:
+#       - "8000:8000"
+#     networks:
+#       internal_net:
+#         ipv4_address: 172.21.1.1
+#     environment:
+#       - ./Djava.library.path=./DynamoDBLocal_lib
+#     volumes:
+#       - dynamodata:/home/dynamodblocal/
+#     working_dir: /home/dynamodblocal/
+#     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ."
+
+# networks:
+#   internal_net:
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: 172.21.0.0/16
+
+# volumes:
+#   dynamodata:
+
+version: '3.8'
 services:
+  dynamodb-local:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    image: amazon/dynamodb-local
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
   web:
     build:
       context: .
@@ -7,45 +67,14 @@ services:
     command: cargo run
     ports:
       - "4000:4000"
-    cap_drop:
-      - all
-    cap_add:
-      - NET_BIND_SERVICE
-    environment:
-      - AWS_PROFILE=localstack
-      - AWS_ACCESS_KEY_ID=AKIDLOCALSTACK
-      - AWS_SECRET_ACCESS_KEY=localstacksecret
-      - AWS_REGION=us-east-1
-      - AWS_DYNAMODB_ENDPOINT=http://0.0.0.0:8000
     depends_on:
-      - dynamodb
+      - "dynamodb-local"
     links:
-      - dynamodb
-    networks:
-      internal_net:
-        ipv4_address: 172.21.1.2
-
-  dynamodb:
-    container_name: "dynamodb"
-    image: amazon/dynamodb-local
-    ports:
-      - "8000:8000"
-    networks:
-      internal_net:
-        ipv4_address: 172.21.1.1
+      - "dynamodb-local"
     environment:
-      - ./Djava.library.path=./DynamoDBLocal_lib
-    volumes:
-      - dynamodata:/home/dynamodblocal/
-    working_dir: /home/dynamodblocal/
-    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ."
-
-networks:
-  internal_net:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.21.0.0/16
-
-volumes:
-  dynamodata:
+      # Since we are using dynamodb local, the IAM authentication mechanism is not used at all. 
+      # That is, whichever credentials you provide, it will be accepted
+      AWS_ACCESS_KEY_ID: 'MYID'
+      AWS_SECRET_ACCESS_KEY: 'MYSECRET'
+      REGION: 'us-east-1'
+      AWS_REGION: 'us-east-1'
