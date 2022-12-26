@@ -17,12 +17,16 @@ pub static ERROR_READ: &str = "Failed to read todo card";
 
 pub async fn get_client() -> Client {
     let config = aws_config::load_from_env().await;
-    let dynamodb_local_config = aws_sdk_dynamodb::config::Builder::from(&config)
-        .endpoint_resolver(Endpoint::immutable(Uri::from_static(
-            "http://localhost:8000",
-        )))
-        .build();
 
+    let addr = if let Ok(db_endpoint) = std::env::var("DYNAMODB_ENDPOINT") {
+        format!("http://{}:8000", db_endpoint)
+    } else {
+        "http://0.0.0.0:8000".to_string()
+    };
+
+    let dynamodb_local_config = aws_sdk_dynamodb::config::Builder::from(&config)
+        .endpoint_resolver(Endpoint::immutable(addr.parse().expect("Invalid URI")))
+        .build();
     Client::from_conf(dynamodb_local_config)
 }
 
