@@ -1,12 +1,13 @@
+use log::{debug, error};
 use std::env;
 
-use actix::{Actor, Addr, SyncArbiter, SyncContext};
+use chrono::{DateTime, Duration, Utc};
 use diesel::pg::PgConnection;
-use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::Connection;
 use diesel_migrations::run_pending_migrations;
 
+use actix::{Actor, Addr, SyncArbiter, SyncContext};
 use actix_web::web;
 use aws_sdk_dynamodb::{
     model::{
@@ -14,7 +15,9 @@ use aws_sdk_dynamodb::{
     },
     Client, Endpoint,
 };
-use log::{debug, error};
+
+use crate::todo_api_web::model::http::Clients;
+use tokio_stream::StreamExt;
 
 pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
 pub static TODO_FILE: &str = "post_todo.json";
@@ -37,6 +40,10 @@ pub fn db_executor_address() -> Addr<DbExecutor> {
         .expect("Failed to create pool.");
 
     SyncArbiter::start(4, move || DbExecutor(pool.clone()))
+}
+
+pub fn one_day_from_now() -> DateTime<Utc> {
+    Utc::now() + Duration::days(1)
 }
 
 pub async fn get_client() -> Client {
@@ -130,9 +137,6 @@ async fn create_table_input(client: &Client) {
     }
 }
 
-use tokio_stream::StreamExt;
-
-use crate::todo_api_web::model::http::Clients;
 pub async fn list_items(state: web::Data<Clients>) {
     let client = state.dynamo.clone();
     let items = client

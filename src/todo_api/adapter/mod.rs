@@ -1,10 +1,11 @@
+pub mod auth;
+
 use actix_web::web;
 use aws_sdk_dynamodb::output::ScanOutput;
 use uuid::Uuid;
 
-use crate::todo_api_web::model::todo::{State, Task, TodoCard};
-
 use super::model::{StateDb, TaskDb, TodoCardDb};
+use crate::todo_api_web::model::todo::{State, Task, TodoCard};
 
 #[macro_export]
 macro_rules! val {

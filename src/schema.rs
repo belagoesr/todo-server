@@ -6,6 +6,7 @@ diesel::table! {
         id -> Uuid,
         password -> Varchar,
         expires_at -> Timestamp,
+        is_active -> Bool,
     }
 }
 
