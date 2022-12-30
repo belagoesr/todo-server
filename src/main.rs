@@ -1,6 +1,13 @@
 pub mod todo_api;
 pub mod todo_api_web;
 
+#[macro_use]
+extern crate diesel_migrations;
+#[macro_use]
+extern crate diesel;
+
+mod schema;
+
 use todo_server::{
     todo_api::db::helpers::create_table,
     todo_api_web::{model::http::Clients, routes::app_routes},
