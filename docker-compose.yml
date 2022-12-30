@@ -27,3 +27,14 @@ services:
       AWS_SECRET_ACCESS_KEY: 'MYSECRET'
       AWS_REGION: 'us-east-1'
       DYNAMODB_ENDPOINT: 'dynamodb-local'
+      DATABASE_URL: 'postgres://auth:secret@postgres:5432/auth_db'
+  postgres:
+    container_name: "postgres"
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: 'auth'
+      POSTGRES_PASSWORD: 'secret'
+      POSTGRES_DB: 'auth_db'
+      PGUSER: 'postgres'

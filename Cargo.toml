@@ -17,6 +17,13 @@ aws-sdk-dynamodb = "0.19.0"
 tokio-stream = "0.1.10"
 log="0.4.8"
 env_logger="0.9.0"
+chrono = { version = "0.4.10", features = ["serde"] }
+dotenv = "0.15.0"
+r2d2 = "0.8.8"
+diesel = { version = "1.4.3", features = ["postgres", "uuidv07", "r2d2", "chrono"] }
+actix = "0.11.0"
+actix-rt = "2.2" # <-- Runtime for actix
+diesel_migrations = "1.4.0"
 
 [dev-dependencies]
 bytes="0.5.3"
