@@ -1,4 +1,13 @@
-use actix_web::{http::Uri, web};
+use std::env;
+
+use actix::{Actor, Addr, SyncArbiter, SyncContext};
+use diesel::pg::PgConnection;
+use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, Pool};
+use diesel::Connection;
+use diesel_migrations::run_pending_migrations;
+
+use actix_web::web;
 use aws_sdk_dynamodb::{
     model::{
         AttributeDefinition, KeySchemaElement, KeyType, ProvisionedThroughput, ScalarAttributeType,
@@ -8,12 +17,27 @@ use aws_sdk_dynamodb::{
 use log::{debug, error};
 
 pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
-
 pub static TODO_FILE: &str = "post_todo.json";
-
 pub static ERROR_SERIALIZE: &str = "Failed to serialize todo cards";
 pub static ERROR_CREATE: &str = "Failed to create todo card";
 pub static ERROR_READ: &str = "Failed to read todo card";
+
+pub struct DbExecutor(pub Pool<ConnectionManager<PgConnection>>);
+
+impl Actor for DbExecutor {
+    type Context = SyncContext<Self>;
+}
+
+pub fn db_executor_address() -> Addr<DbExecutor> {
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    let pool = r2d2::Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool.");
+
+    SyncArbiter::start(4, move || DbExecutor(pool.clone()))
+}
 
 pub async fn get_client() -> Client {
     let config = aws_config::load_from_env().await;
@@ -30,7 +54,18 @@ pub async fn get_client() -> Client {
     Client::from_conf(dynamodb_local_config)
 }
 
+fn run_migrations() {
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let pg_conn = PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url));
+    match run_pending_migrations(&pg_conn) {
+        Ok(_) => debug!("auth database created"),
+        Err(_) => error!("auth database creation failed"),
+    };
+}
+
 pub async fn create_table(client: &Client) {
+    run_migrations();
     match client.list_tables().send().await {
         Ok(list) => {
             match list.table_names {

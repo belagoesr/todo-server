@@ -1,5 +1,5 @@
 use crate::todo_api::adapter;
-use crate::todo_api::db::helpers::{ERROR_CREATE, ERROR_READ, ERROR_SERIALIZE};
+use crate::todo_api::db::helpers::{ERROR_CREATE, ERROR_READ};
 use crate::todo_api::db::todo::{get_todos, put_todo};
 use crate::todo_api_web::model::http::Clients;
 use crate::todo_api_web::model::todo::{TodoCard, TodoCardsResponse, TodoIdResponse};
