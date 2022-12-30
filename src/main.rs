@@ -1,22 +1,29 @@
 pub mod todo_api;
 pub mod todo_api_web;
 
-use todo_server::{todo_api::db::helpers::create_table, todo_api_web::routes::app_routes};
+use todo_server::{
+    todo_api::db::helpers::create_table,
+    todo_api_web::{model::http::Clients, routes::app_routes},
+};
 
-use actix_web::middleware::Logger;
-use actix_web::{App, HttpServer};
+use actix_web::middleware::{DefaultHeaders, Logger};
+use actix_web::{web, App, HttpServer};
 use env_logger;
+use uuid::Uuid;
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
-    create_table().await;
-    HttpServer::new(|| {
+
+    let client = web::Data::new(Clients::new().await);
+    create_table(&client.dynamo.clone()).await;
+
+    HttpServer::new(move|| {
         App::new()
-            .wrap(Logger::new(
-                "IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D",
-            ))
+            .app_data(client.clone())
+            .wrap(DefaultHeaders::new().add(("x-request-id", Uuid::new_v4().to_string())))
+            .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o"))
             .configure(app_routes)
     })
     .workers(num_cpus::get() - 2)
