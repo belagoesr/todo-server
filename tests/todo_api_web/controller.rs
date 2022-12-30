@@ -1,10 +1,12 @@
 mod ping_readiness {
     use actix_web::{body, http::StatusCode, test, web, App};
-    use todo_server::todo_api_web::routes::app_routes;
+    use todo_server::todo_api_web::{model::http::Clients, routes::app_routes};
 
     #[actix_web::test]
     async fn test_ping_pong() {
-        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        let client = web::Data::new(Clients::new().await);
+        let mut app =
+            test::init_service(App::new().app_data(client.clone()).configure(app_routes)).await;
 
         let req = test::TestRequest::get().uri("/ping").to_request();
         let resp = test::call_service(&mut app, req).await;
@@ -16,7 +18,9 @@ mod ping_readiness {
 
     #[actix_web::test]
     async fn test_readiness() {
-        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        let client = web::Data::new(Clients::new().await);
+        let mut app =
+            test::init_service(App::new().app_data(client.clone()).configure(app_routes)).await;
         let req = test::TestRequest::get().uri("/~/ready").to_request();
         let resp = test::call_service(&mut app, req).await;
 
@@ -28,21 +32,21 @@ mod create_todo {
     use crate::helpers::read_json;
     use todo_server::{
         todo_api::db::helpers::TODO_FILE,
-        todo_api_web::{model::todo::TodoIdResponse, routes::app_routes},
+        todo_api_web::{model::http::Clients, model::todo::TodoIdResponse, routes::app_routes},
     };
 
     use actix_web::{
         body,
         http::header::{ContentType, CONTENT_TYPE},
-        test, App,
+        test, web, App,
     };
     use serde_json::from_str;
 
     #[actix_web::test]
     async fn valid_todo_post() {
-        // use crate::todo_api::db::helpers::create_table().await;
-
-        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        let client = web::Data::new(Clients::new().await);
+        let mut app =
+            test::init_service(App::new().app_data(client.clone()).configure(app_routes)).await;
         let req = test::TestRequest::post()
             .uri("/api/create")
             .insert_header((CONTENT_TYPE, ContentType::json()))
@@ -60,7 +64,9 @@ mod create_todo {
 mod read_all_todos {
     use serde_json::from_str;
     use todo_server::todo_api::db::helpers::TODO_FILE;
-    use todo_server::todo_api_web::{model::todo::TodoCardsResponse, routes::app_routes};
+    use todo_server::todo_api_web::{
+        model::http::Clients, model::todo::TodoCardsResponse, routes::app_routes,
+    };
 
     use actix_web::{
         body,
@@ -68,14 +74,16 @@ mod read_all_todos {
             header::{ContentType, CONTENT_TYPE},
             StatusCode,
         },
-        test, App,
+        test, web, App,
     };
 
     use crate::helpers::{mock_get_todos, read_json};
 
     #[actix_web::test]
     async fn test_todo_index_ok() {
-        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        let client = web::Data::new(Clients::new().await);
+        let mut app =
+            test::init_service(App::new().app_data(client.clone()).configure(app_routes)).await;
 
         let req = test::TestRequest::get().uri("/api/index").to_request();
 
@@ -85,7 +93,9 @@ mod read_all_todos {
 
     #[actix_web::test]
     async fn test_todo_cards_count() {
-        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        let client = web::Data::new(Clients::new().await);
+        let mut app =
+            test::init_service(App::new().app_data(client.clone()).configure(app_routes)).await;
 
         let post_req = test::TestRequest::post()
             .uri("/api/create")
@@ -105,7 +115,9 @@ mod read_all_todos {
 
     #[actix_web::test]
     async fn test_todo_cards_with_value() {
-        let mut app = test::init_service(App::new().configure(app_routes)).await;
+        let client = web::Data::new(Clients::new().await);
+        let mut app =
+            test::init_service(App::new().app_data(client.clone()).configure(app_routes)).await;
 
         let post_req = test::TestRequest::post()
             .uri("/api/create")

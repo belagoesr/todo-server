@@ -1,4 +1,4 @@
-use actix_web::http::Uri;
+use actix_web::{http::Uri, web};
 use aws_sdk_dynamodb::{
     model::{
         AttributeDefinition, KeySchemaElement, KeyType, ProvisionedThroughput, ScalarAttributeType,
@@ -30,8 +30,7 @@ pub async fn get_client() -> Client {
     Client::from_conf(dynamodb_local_config)
 }
 
-pub async fn create_table() {
-    let client = get_client().await;
+pub async fn create_table(client: &Client) {
     match client.list_tables().send().await {
         Ok(list) => {
             match list.table_names {
@@ -97,8 +96,10 @@ async fn create_table_input(client: &Client) {
 }
 
 use tokio_stream::StreamExt;
-pub async fn list_items() {
-    let client = get_client().await;
+
+use crate::todo_api_web::model::http::Clients;
+pub async fn list_items(state: web::Data<Clients>) {
+    let client = state.dynamo.clone();
     let items = client
         .scan()
         .table_name(TODO_CARD_TABLE.to_string())
