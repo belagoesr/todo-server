@@ -15,8 +15,8 @@ clear-db:
 
 int: db
 	sleep 2
-	diesel setup
-	diesel migration run
+	diesel setup --migration-dir src/migrations
+	diesel migration run --migration-dir src/migrations
 	cargo test --test lib --no-fail-fast --features "dbtest" -- --test-threads 3
 	diesel migration redo
 
