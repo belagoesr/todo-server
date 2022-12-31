@@ -1,10 +1,9 @@
 use crate::schema::*;
-use actix::{Handler, Message};
 use bcrypt::{verify, BcryptResult};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone, Queryable, Insertable)]
-#[table_name = "auth_user"]
+#[diesel(table_name = auth_user)]
 pub struct User {
     pub email: String,
     pub id: uuid::Uuid,
@@ -51,7 +50,7 @@ impl User {
     }
 
     #[cfg(feature = "db-test")]
-    pub fn verify(&self, pswd: String) -> BcryptResult<bool> {
+    pub fn verify(&self, _pswd: String) -> BcryptResult<bool> {
         BcryptResult::Ok(true)
     }
 

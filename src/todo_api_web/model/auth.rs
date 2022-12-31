@@ -45,7 +45,7 @@ impl Handler<SignUp> for DbExecutor {
 
         let user = adapter::auth::signup_to_hash_user(msg);
 
-        insert_new_user(user, &self.0.get().expect("Failed to open connection"))
+        insert_new_user(user, &mut self.0.get().expect("Failed to open connection"))
     }
 }
 
@@ -84,6 +84,9 @@ impl Handler<Auth> for DbExecutor {
     fn handle(&mut self, msg: Auth, _: &mut Self::Context) -> Self::Result {
         use crate::todo_api::db::auth::scan_user;
 
-        scan_user(msg.email, &self.0.get().expect("Failed to open connection"))
+        scan_user(
+            msg.email,
+            &mut self.0.get().expect("Failed to open connection"),
+        )
     }
 }
