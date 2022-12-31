@@ -1,12 +1,6 @@
 use log::{debug, error};
 use std::env;
 
-use chrono::{DateTime, Duration, Utc};
-use diesel::pg::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::Connection;
-use diesel_migrations::run_pending_migrations;
-
 use actix::{Actor, Addr, SyncArbiter, SyncContext};
 use actix_web::web;
 use aws_sdk_dynamodb::{
@@ -15,9 +9,16 @@ use aws_sdk_dynamodb::{
     },
     Client, Endpoint,
 };
+use chrono::{DateTime, Duration, Utc};
+use diesel::pg::PgConnection;
+use diesel::r2d2::{ConnectionManager, Pool};
+use diesel::Connection;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
 use crate::todo_api_web::model::http::Clients;
 use tokio_stream::StreamExt;
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
 pub static TODO_FILE: &str = "post_todo.json";
@@ -61,18 +62,19 @@ pub async fn get_client() -> Client {
     Client::from_conf(dynamodb_local_config)
 }
 
-fn run_migrations() {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let pg_conn = PgConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url));
-    match run_pending_migrations(&pg_conn) {
+fn run_migrations(pg_conn: &mut PgConnection) {
+    match pg_conn.run_pending_migrations(MIGRATIONS) {
         Ok(_) => debug!("auth database created"),
         Err(_) => error!("auth database creation failed"),
     };
 }
 
 pub async fn create_table(client: &Client) {
-    run_migrations();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let mut pg_conn = PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url));
+
+    run_migrations(&mut pg_conn);
     match client.list_tables().send().await {
         Ok(list) => {
             match list.table_names {

@@ -100,8 +100,6 @@ pub fn is_email_pswd_valids(email: &str, pswd: &str) -> bool {
 #[cfg(test)]
 mod jwt_validations {
     use super::{validate_jwt_date, validate_jwt_info};
-    use crate::todo_api::model::auth::User;
-    use crate::todo_api_web::model::http::Clients;
     use chrono::{DateTime, Utc};
 
     #[test]

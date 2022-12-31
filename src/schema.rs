@@ -9,5 +9,3 @@ diesel::table! {
         is_active -> Bool,
     }
 }
-
-embed_migrations!();

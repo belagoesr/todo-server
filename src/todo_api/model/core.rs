@@ -30,7 +30,7 @@ impl Handler<UpdateUserStatus> for DbExecutor {
     fn handle(&mut self, msg: UpdateUserStatus, _: &mut Self::Context) -> Self::Result {
         use crate::todo_api::db::auth::update_user_jwt_date;
 
-        update_user_jwt_date(msg, &self.0.get().expect("Failed to open connection"))
+        update_user_jwt_date(msg, &mut self.0.get().unwrap())
     }
 }
 
@@ -54,7 +54,7 @@ impl Handler<JwtValue> for DbExecutor {
 
         let user = scan_user(
             String::from(&msg.email),
-            &self.0.get().expect("Failed to open connection"),
+            &mut self.0.get().expect("Failed to open connection"),
         );
         match user {
             Err(_) => false,
@@ -121,6 +121,6 @@ impl Handler<Inactivate> for DbExecutor {
     fn handle(&mut self, msg: Inactivate, _: &mut Self::Context) -> Self::Result {
         use crate::todo_api::db::auth::inactivate_user;
 
-        inactivate_user(msg, &self.0.get().expect("Failed to open connection"))
+        inactivate_user(msg, &mut self.0.get().expect("Failed to open connection"))
     }
 }

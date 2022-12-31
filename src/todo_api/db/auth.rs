@@ -7,7 +7,7 @@ use crate::todo_api::model::{
 };
 
 #[cfg(not(feature = "db-test"))]
-pub fn insert_new_user(user: User, conn: &PgConnection) -> Result<(), DbError> {
+pub fn insert_new_user(user: User, conn: &mut PgConnection) -> Result<(), DbError> {
     use crate::schema::auth_user::dsl::*;
 
     let new_user = diesel::insert_into(auth_user).values(&user).execute(conn);
@@ -19,7 +19,7 @@ pub fn insert_new_user(user: User, conn: &PgConnection) -> Result<(), DbError> {
 }
 
 #[cfg(feature = "db-test")]
-pub fn insert_new_user(_user: User, _: &PgConnection) -> Result<(), DbError> {
+pub fn insert_new_user(_user: User, _: &mut PgConnection) -> Result<(), DbError> {
     use crate::schema::auth_user::dsl::*;
     use diesel::debug_query;
     use diesel::pg::Pg;
@@ -41,7 +41,7 @@ pub fn insert_new_user(_user: User, _: &PgConnection) -> Result<(), DbError> {
 
 #[cfg(not(feature = "db-test"))]
 #[cfg(not(feature = "unit-db-test"))]
-pub fn scan_user(user_email: String, conn: &PgConnection) -> Result<User, DbError> {
+pub fn scan_user(user_email: String, conn: &mut PgConnection) -> Result<User, DbError> {
     use crate::schema::auth_user::dsl::*;
 
     let items = auth_user.filter(email.eq(&user_email)).load::<User>(conn);
@@ -55,7 +55,7 @@ pub fn scan_user(user_email: String, conn: &PgConnection) -> Result<User, DbErro
 }
 
 #[cfg(feature = "db-test")]
-pub fn scan_user(user_email: String, _conn: &PgConnection) -> Result<User, DbError> {
+pub fn scan_user(user_email: String, _conn: &mut PgConnection) -> Result<User, DbError> {
     use crate::schema::auth_user::dsl::*;
     use diesel::debug_query;
     use diesel::pg::Pg;
@@ -82,7 +82,7 @@ pub fn test_scan_user(
 #[cfg(not(feature = "db-test"))]
 pub fn update_user_jwt_date(
     update_date: UpdateUserStatus,
-    conn: &PgConnection,
+    conn: &mut PgConnection,
 ) -> Result<(), DbError> {
     use crate::schema::auth_user::dsl::*;
 
@@ -102,13 +102,13 @@ pub fn update_user_jwt_date(
 #[cfg(feature = "db-test")]
 pub fn update_user_jwt_date(
     _update_date: UpdateUserStatus,
-    _conn: &PgConnection,
+    _conn: &mut PgConnection,
 ) -> Result<(), DbError> {
     Ok(())
 }
 
 #[cfg(not(feature = "db-test"))]
-pub fn inactivate_user(msg: Inactivate, conn: &PgConnection) -> Result<(), DbError> {
+pub fn inactivate_user(msg: Inactivate, conn: &mut PgConnection) -> Result<(), DbError> {
     use crate::schema::auth_user::dsl::*;
 
     let target = auth_user.filter(email.eq(msg.email));
@@ -122,7 +122,7 @@ pub fn inactivate_user(msg: Inactivate, conn: &PgConnection) -> Result<(), DbErr
 }
 
 #[cfg(feature = "db-test")]
-pub fn inactivate_user(_msg: Inactivate, _conn: &PgConnection) -> Result<(), DbError> {
+pub fn inactivate_user(_msg: Inactivate, _conn: &mut PgConnection) -> Result<(), DbError> {
     Ok(())
 }
 
