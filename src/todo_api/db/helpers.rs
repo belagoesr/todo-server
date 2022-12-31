@@ -18,7 +18,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use crate::todo_api_web::model::http::Clients;
 use tokio_stream::StreamExt;
 
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("src/migrations");
 
 pub static TODO_CARD_TABLE: &str = "TODO_CARDS";
 pub static TODO_FILE: &str = "post_todo.json";
