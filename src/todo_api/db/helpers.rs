@@ -62,13 +62,6 @@ pub async fn get_client() -> Client {
     Client::from_conf(dynamodb_local_config)
 }
 
-fn run_migrations(pg_conn: &mut PgConnection) {
-    match pg_conn.run_pending_migrations(MIGRATIONS) {
-        Ok(_) => debug!("auth database created"),
-        Err(_) => error!("auth database creation failed"),
-    };
-}
-
 pub async fn create_table(client: &Client) {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut pg_conn = PgConnection::establish(&database_url)
@@ -92,6 +85,13 @@ pub async fn create_table(client: &Client) {
             create_table_input(&client).await;
         }
     }
+}
+
+fn run_migrations(pg_conn: &mut PgConnection) {
+    match pg_conn.run_pending_migrations(MIGRATIONS) {
+        Ok(_) => debug!("auth database created"),
+        Err(_) => error!("auth database creation failed"),
+    };
 }
 
 fn build_key_schema() -> KeySchemaElement {
