@@ -13,12 +13,9 @@ pub fn app_routes(config: &mut web::ServiceConfig) {
             .service(readiness)
             .service(create_todo)
             .service(show_all_todo)
-            .service(
-                web::scope("auth/")
-                    .service(signup_user)
-                    .service(login)
-                    .service(logout),
-            )
+            .service(signup_user)
+            .service(login)
+            .service(logout)
             .default_service(web::to(|| HttpResponse::NotFound())),
     );
 }

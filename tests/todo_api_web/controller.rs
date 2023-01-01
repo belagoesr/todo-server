@@ -185,6 +185,7 @@ mod auth {
         let resp = app.call(signup_req).await.unwrap();
         assert_eq!(resp.status(), StatusCode::CREATED);
     }
+
     #[actix_rt::test]
     async fn logout_accepted() {
         dotenv().ok();
