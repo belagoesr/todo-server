@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-#[post("/auth/login")]
+#[post("/login")]
 pub async fn login(state: web::Data<Clients>, info: web::Json<Auth>) -> impl Responder {
     let login_user = info.clone();
     if !is_email_pswd_valids(&login_user.email, &login_user.password.clone().unwrap()) {
@@ -36,7 +36,7 @@ pub async fn login(state: web::Data<Clients>, info: web::Json<Auth>) -> impl Res
         }
     }
 }
-#[post("/auth/signup")]
+#[post("/signup")]
 pub async fn signup_user(state: web::Data<Clients>, info: web::Json<SignUp>) -> impl Responder {
     let signup = info.into_inner();
     if !is_email_pswd_valids(&signup.email, &signup.password) {
@@ -54,7 +54,7 @@ pub async fn signup_user(state: web::Data<Clients>, info: web::Json<SignUp>) -> 
     }
 }
 
-#[post("/auth/logout")]
+#[post("/logout")]
 pub async fn logout(
     req: HttpRequest,
     state: web::Data<Clients>,
