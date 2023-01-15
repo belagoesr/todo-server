@@ -1,4 +1,4 @@
-use crate::todo_api::{db::helpers::DbExecutor, model::error::DbError};
+use crate::todo_api::{core::validate_jwt_date, db::helpers::DbExecutor, model::error::DbError};
 use actix::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -48,9 +48,9 @@ impl Message for JwtValue {
 impl Handler<JwtValue> for DbExecutor {
     type Result = bool;
 
-    #[cfg(not(feature = "db-test"))]
+    #[cfg(not(feature = "dbtest"))]
     fn handle(&mut self, msg: JwtValue, _: &mut Self::Context) -> Self::Result {
-        use crate::todo_api::{core::validate_jwt_date, db::auth::scan_user};
+        use crate::todo_api::db::auth::scan_user;
 
         let user = scan_user(
             String::from(&msg.email),
@@ -71,14 +71,14 @@ impl Handler<JwtValue> for DbExecutor {
         }
     }
 
-    #[cfg(feature = "db-test")]
+    #[cfg(feature = "dbtest")]
     fn handle(&mut self, msg: JwtValue, _: &mut Self::Context) -> Self::Result {
-        use crate::todo_api::{core::validate_jwt_date, db::auth::test_scan_user};
+        use crate::todo_api::db::auth::test_scan_user;
 
         let user = test_scan_user(
             String::from(&msg.email),
             String::from(&msg.id),
-            &self.0.get().expect("Failed to open connection"),
+            &mut self.0.get().expect("Failed to open connection"),
         );
         match user {
             Err(_) => false,

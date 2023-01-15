@@ -26,6 +26,7 @@ pub static ERROR_SERIALIZE: &str = "Failed to serialize todo cards";
 pub static ERROR_CREATE: &str = "Failed to create todo card";
 pub static ERROR_READ: &str = "Failed to read todo card";
 
+#[derive(Debug)]
 pub struct DbExecutor(pub Pool<ConnectionManager<PgConnection>>);
 
 impl Actor for DbExecutor {
@@ -62,27 +63,27 @@ pub async fn get_client() -> Client {
     Client::from_conf(dynamodb_local_config)
 }
 
-pub async fn create_table(client: &Client) {
+pub async fn create_table(client: &Clients) {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut pg_conn = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
 
     run_migrations(&mut pg_conn);
-    match client.list_tables().send().await {
+    match client.dynamo.list_tables().send().await {
         Ok(list) => {
             match list.table_names {
                 Some(table_vec) => {
                     if table_vec.len() > 0 {
                         println!("Error: {:?}", "Table already exists");
                     } else {
-                        create_table_input(&client).await
+                        create_table_input(&client.dynamo).await
                     }
                 }
-                None => create_table_input(&client).await,
+                None => create_table_input(&client.dynamo).await,
             };
         }
         Err(_) => {
-            create_table_input(&client).await;
+            create_table_input(&client.dynamo).await;
         }
     }
 }

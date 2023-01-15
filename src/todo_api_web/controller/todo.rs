@@ -9,7 +9,7 @@ use actix_web::{http::header::ContentType, post, web, HttpResponse, Responder};
 use log::error;
 use uuid::Uuid;
 
-#[post("/api/create")]
+#[post("/create")]
 pub async fn create_todo(state: web::Data<Clients>, info: web::Json<TodoCard>) -> impl Responder {
     let id = Uuid::new_v4();
     let todo_card = adapter::todo_json_to_db(info, id);
@@ -26,7 +26,7 @@ pub async fn create_todo(state: web::Data<Clients>, info: web::Json<TodoCard>) -
     }
 }
 
-#[get("/api/index")]
+#[get("/index")]
 pub async fn show_all_todo(state: web::Data<Clients>) -> impl Responder {
     let client = state.dynamo.clone();
     let resp = get_todos(&client).await;

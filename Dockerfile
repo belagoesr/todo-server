@@ -19,7 +19,7 @@ COPY ./Cargo.toml ./Cargo.toml
 COPY ./tests ./tests
 
 RUN cargo build --release
-#RUN rm src/*.rs
+RUN rm /usr/src/app/src/*.rs
 
 COPY ./src ./src
 

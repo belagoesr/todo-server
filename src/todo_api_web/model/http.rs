@@ -3,7 +3,7 @@ use aws_sdk_dynamodb::Client;
 
 use crate::todo_api::db::helpers::{db_executor_address, get_client, DbExecutor};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Clients {
     pub dynamo: Client,
     pub postgres: Addr<DbExecutor>,
