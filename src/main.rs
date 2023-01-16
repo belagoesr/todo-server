@@ -10,7 +10,9 @@ mod schema;
 
 use todo_server::{
     todo_api::db::helpers::create_table,
-    todo_api_web::{middleware::authentication_mw, model::http::Clients, routes::app_routes},
+    todo_api_web::{
+        middleware::authentication_middleware, model::http::Clients, routes::app_routes,
+    },
 };
 
 use actix_web::{
@@ -36,7 +38,7 @@ async fn main() -> Result<(), std::io::Error> {
             .app_data(Data::new(client.clone()))
             .wrap(DefaultHeaders::new().add(("x-request-id", Uuid::new_v4().to_string())))
             .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o"))
-            .wrap(from_fn(authentication_mw))
+            .wrap(from_fn(authentication_middleware))
             .configure(app_routes)
     })
     .workers(num_cpus::get() - 2)
