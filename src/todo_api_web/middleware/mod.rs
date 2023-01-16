@@ -25,7 +25,7 @@ pub async fn authentication_middleware(
             Some(token) => {
                 let decoded_jwt: JwtValue =
                     serde_json::from_value(decode_jwt(token.to_str().unwrap()))
-                        .expect("Failed to parse Jwt");
+                        .expect("Failed to parse Jwt.");
 
                 let valid_jwt = data.postgres.send(decoded_jwt);
                 let fut = next.call(req).await?;
